@@ -23,7 +23,7 @@ Instead of targeting the main folder and rendering everything, this app basicall
 - Browse and preview image thumbnails efficiently via md5 and local thumbnail cache
 - Select which monitor to apply the wallpaper to
 - Scans folder ~/Pictures/Wallpapers and any folders underneath and gives user album separation in the app 
-- Wallpaper changes loads immediatelly and send changes to hyprpaper.conf, that means the wallpaper persists EVEN AFTER RESTART!!! 
+- Wallpaper changes loads immediatelly and when closing the app, it send changes to hyprpaper.conf, that means the wallpaper persists EVEN AFTER RESTART!!! 
 - Supports up to 10 monitors with clean changes in theory
 - Supports Kvantum theme, but because the app basically transparent, it only applies to combobox and scrollbar
 
