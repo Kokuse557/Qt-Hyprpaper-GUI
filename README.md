@@ -4,11 +4,11 @@ A High-Performance GUI wallpaper selector for Hyprpaper, built with C++ using QT
 
 ## About author and this Project
 
-Qt-Hyprpaper-GUI, I created this in my free time, so it’s my exploration stuff. There are some others who created the same concept; some of them used Python Pygame, which in my experience uses high CPU and opens a little bit slowly, then I created my own version with Rust (https://github.com/Kokuse557/Hyprpaper-GUI) then i expand my exploration to C++ and QT framework.
+Qt-Hyprpaper-GUI, I created this in my free time, so it’s my exploration stuff. There are some others who created the same concept; some of them used Python Pygame, which in my experience uses high CPU and opens a little bit slowly, then I created my own version with Rust (https://github.com/Kokuse557/Hyprpaper-GUI) then i expand my exploration to C++ and QT framework. This QT version, has transparent baground so its kinda fit nicely especially inside Hyprland.
 
 ## Why QT framework?
 
-One of the reason was, im using linux with Hyprland desktop and there is a bunch of QT apps already, such as DaVinci Resolve Studio (video/audio editing, compositing), Strawberry (music player), OBS Studio (Video/Audio Recording) so im thinking about sort of QT-Ecosystem inside Hyprland.
+One of the reason was, im using linux with Hyprland desktop and there is a bunch of QT apps already, such as DaVinci Resolve Studio (video/audio editing, compositing), Strawberry (music player), OBS Studio (Video/Audio Recording), VLC Player (Video/Audio Player) so im thinking about sort of QT-Ecosystem inside Hyprland.
 
 ## High-Performance GUI
 
@@ -28,6 +28,7 @@ Instead of targeting the main folder and rendering everything, this app basicall
 
 ## NOTICE
 - Make sure you set ~/config/hypr/hyprpaper.conf "ipc = on" so the application can call "hyprctl hyprpaper ...". Otherwise, the command won’t find the Hyprpaper socket.
+- It runs automatically with GPU acceleration. If there is some artifacts, maybe nvidia, u can try use flag --cpu to use software render.
 - For convenience, place all of your wallpapers in ~/Pictures/Wallpapers and then you can add more wallpaper folders underneath.
 - This app generates text to preload and load entries inside hyprpaper.conf via lockdown per lines, line 8-30 (if u're using 10 monitors) so users can add more config from line 1-7
 
