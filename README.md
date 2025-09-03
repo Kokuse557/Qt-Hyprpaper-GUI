@@ -34,6 +34,15 @@ Instead of targeting the main folder and rendering everything, this app basicall
 - This app generates text to preload and load entries inside hyprpaper.conf via lockdown per lines, line 8-30 (if u're using 10 monitors) so users can add more config from line 1-7
 - If you need clean hyprpaper.conf, u can grab from /docs/hyprpaper.conf and then overwrite the existing one at ~/.config/hypr/
 
+## DEPENDENCIES
+
+Arch Linux
+- qt6-base 
+- qt6-tools 
+- qt6-svg 
+- qt6-imageformats 
+- qt6-wayland 
+
 ## Screenshots
 ![Qt Hyprpaper GUI Screenshot](docs/Qt-Hyprpaper-GUI_1_hyprshot.png)
 ![Qt Hyprpaper GUI Screenshot](docs/Qt-Hyprpaper-GUI_2_hyprshot.png)
