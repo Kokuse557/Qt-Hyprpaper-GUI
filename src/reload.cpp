@@ -24,6 +24,7 @@ void recordClick(const QString &monitor, const QString &filePath) {
 // Monitor fetcher
 // -------------------------------
 // get monitors from hyprctl
+
 QStringList getMonitorList() {
     QStringList monitors;
     QProcess proc;
@@ -71,6 +72,8 @@ void loadLastClickedWallpapers() {
     }
     f.close();
 
+    //Move process when the GUI closes
+
     // 🔹 Extra: RAM CLEANUP TIME 
     // int ret = QProcess::execute("hyprctl", {"hyprpaper", "unload", "unused"});
     // if (ret != 0) {
@@ -84,7 +87,7 @@ void loadLastClickedWallpapers() {
 // Update hyprpaper realtime
 // -------------------------
 
-// Robustly run hyprctl preload + wallpaper. Try both comma formats if needed.
+// Run hyprctl preload + wallpaper. 
 void updateHyprpaperWallpaper(const QString &monitor, const QString &filePath) {
     if (monitor.isEmpty() || filePath.isEmpty()) return;
 
@@ -123,7 +126,7 @@ void updateHyprpaperWallpaper(const QString &monitor, const QString &filePath) {
 // Update hyprpaper.conf
 // -------------------------------
 
-// Write hyprpaper.conf placing preload lines at lines 11..20 and wallpaper lines at 21..30
+// Write hyprpaper.conf placing preload lines at lines 11..20 and wallpaper lines at 21..30---> We're gonna readjust this thing when someone says "YEAH 20 MONITORS BABY, WHERE THE GOD DAMN FIX"
 void updateHyprpaperConf() {
     QFile file(HYPRPAPER_CONF());
     QStringList originalLines;
@@ -173,6 +176,7 @@ void updateHyprpaperConf() {
         }
     }
 
+    // 10 MONITORS WHERE!!!
     // constants: reserved slots
     const int PRELOAD_START   = 10; // line 11 (1-based)
     const int PRELOAD_COUNT   = 10;
@@ -192,7 +196,7 @@ void updateHyprpaperConf() {
             QString mon  = monitors[i];
             QString full = lastClickedWallpapers.value(mon);
             if (!full.isEmpty())
-                l = QString("preload = %1").arg(full); // file, not dir
+                l = QString("preload = %1").arg(full); // file, not dir! okay bud...
             else
                 l = QString();
         }

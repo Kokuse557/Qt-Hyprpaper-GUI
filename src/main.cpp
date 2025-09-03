@@ -259,7 +259,7 @@ protected:
             QString monitor = m_currentMonitor; // now safe
             recordClick(monitor, filePath);
             updateHyprpaperWallpaper(monitor, filePath);
-            // updateHyprpaperConf();
+            // updateHyprpaperConf(); // Not Yet
         }
         QWidget::mousePressEvent(event);
     }
@@ -305,7 +305,7 @@ private:
     void startHoverTimer() {
         if (!hoverTimer.isActive()) {
             connect(&hoverTimer, &QTimer::timeout, this, [=](){ update(); });
-            hoverTimer.start(90); // ~30ms for smooth pulsing
+            hoverTimer.start(90); // ~30ms for smooth pulsing, but lets do 90
         }
     }
 
