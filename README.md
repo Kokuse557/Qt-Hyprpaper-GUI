@@ -52,3 +52,5 @@ make
 cmake -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build --config Release -j$(nproc)
 
+# Or if you trust the ready to open executable, you can get from folder Executable/QT-hyprpaper-GUI. If the app wont open, from double click, open it from terminal and lets see the error result. 
+
