@@ -30,7 +30,7 @@ Instead of targeting the main folder and rendering everything, this app basicall
 ## NOTICE
 - Make sure you set ~/config/hypr/hyprpaper.conf "ipc = on" so the application can call "hyprctl hyprpaper ...". Otherwise, the command won’t find the Hyprpaper socket.
 - It runs automatically with GPU acceleration. If there is some artifacts, maybe nvidia, u can try use flag --cpu to use software render.
-- For convenience, place all of your wallpapers in ~/Pictures/Wallpapers and then you can add more wallpaper folders underneath.
+- For your convenience, place all of your wallpapers in ~/Pictures/Wallpapers and then you can add more wallpaper folders underneath.
 - This app generates text to preload and load entries inside hyprpaper.conf via lockdown per lines, line 8-30 (if u're using 10 monitors) so users can add more config from line 1-7
 - If you need clean hyprpaper.conf, u can grab from /docs/hyprpaper.conf and then overwrite the existing one at ~/.config/hypr/ (RECOMMENDED)
 
