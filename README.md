@@ -34,7 +34,7 @@ Instead of targeting the main folder and rendering everything, this app basicall
 
 ## Screenshots
 ![Qt Hyprpaper GUI Screenshot](docs/Qt-Hyprpaper-GUI_1_hyprshot.png)
-![Qt Hyprpaper GUI Screenshot](docs/Qt-Hyprpaper-GUI_1_hyprshot.png)
+![Qt Hyprpaper GUI Screenshot](docs/Qt-Hyprpaper-GUI_2_hyprshot.png)
 
 ## Building & Running
 
