@@ -31,6 +31,9 @@
 #include "paths.h"
 #include "inotifywatcher.h"
 
+#include "gpu_renderer.h"
+#include "cachedimage.h"
+
 
 
 int THUMB_HEIGHT = 200; 
@@ -38,15 +41,6 @@ const int SPACING = 10;
 const int FOLDER_GAP = 30;
 const int WINDOW_PADDING = 20;
 
-struct CachedImage {
-    QPixmap pix;
-    QString folder;
-    QString filePath;
-
-    bool operator==(const CachedImage &other) const {
-        return filePath == other.filePath; // unique by path
-    }
-};
 
 class QHppQ : public QWidget {
     Q_OBJECT
@@ -85,6 +79,7 @@ public:
         int rowWidth = 0;
         QString currentFolder;
         QList<CachedImage> rowPixmaps;
+        
 
         for (int i = 0; i < m_pixmaps.size(); ++i) {
             const CachedImage &cimg = m_pixmaps[i];
@@ -359,36 +354,64 @@ private:
 };
 
 
-//////////////////////////////
-////// APPLICATION GUI ///////
-//////////////////////////////
-
 int main(int argc, char *argv[]) {
-
-    // Check for --cpu flag // Software CPU Render
+ 
+    // Step 0: parse CPU flag
+    bool cpuFlag = false;
     for (int i = 1; i < argc; ++i) {
         if (QString(argv[i]) == "--cpu") {
+            cpuFlag = true;
             QCoreApplication::setAttribute(Qt::AA_UseSoftwareOpenGL);
             break;
         }
     }
-    
+
+if(cpuFlag)
+    qDebug() << "CPU render mode enabled";
+else
+    qDebug() << "GPU accelerated render mode enabled";
+
+
     QApplication app(argc, argv);
     QSettings settings("QtHyprpaper", "QtHyprpaperGUI");
-
-    // Connect the aboutToQuit signal to updateHyprpaperConf
-    QObject::connect(&app, &QApplication::aboutToQuit, []() {
-        updateHyprpaperConf();  // write all clicks to hyprpaper.conf
-    });
 
     app.setApplicationName("QtHyprpaperGUI"); 
     app.setApplicationDisplayName("Qt Hyprpaper GUI"); 
 
-    loadLastClickedWallpapers();          // Step 1: load previous clicks
-    QStringList monitors = getMonitorList(); // Step 2: preload monitors
+    QObject::connect(&app, &QApplication::aboutToQuit, []() {
+        updateHyprpaperConf(); // save clicks to hyprpaper.conf
+    });
 
-    QHppQ *grid = new QHppQ(CACHE_FOLDER(), MAIN_FOLDER());
+    loadLastClickedWallpapers();
+    QStringList monitors = getMonitorList();
 
+    // Step 1: preload thumbnails
+    QList<CachedImage> m_pixmaps;
+    QDirIterator it(MAIN_FOLDER(), QDir::Files, QDirIterator::Subdirectories);
+    while (it.hasNext()) {
+        QString filePath = it.next();
+        QFileInfo fi(filePath);
+        QString folderName = fi.dir().dirName();
+        QByteArray uri = ("file://" + fi.absoluteFilePath()).toUtf8();
+        QString md5 = QCryptographicHash::hash(uri, QCryptographicHash::Md5).toHex();
+        QString cachedPath = CACHE_FOLDER() + "/" + md5 + ".png";
+        if (QFile::exists(cachedPath)) {
+            QPixmap pix(cachedPath);
+            if (!pix.isNull()) m_pixmaps.append({pix, folderName, filePath});
+        }
+    }
+
+    // Step 2: create renderer widget
+    QWidget *grid = nullptr;
+    if (cpuFlag) {
+        grid = new QHppQ(CACHE_FOLDER(), MAIN_FOLDER());
+    } else {
+        auto gpuGrid = new QHppQ_GPU(CACHE_FOLDER(), MAIN_FOLDER());
+        gpuGrid->loadPixmaps(m_pixmaps);
+        grid = gpuGrid;
+    }
+
+    // Step 3: Scroll area setup
     QScrollArea *scroll = new QScrollArea;
     scroll->setWidget(grid);
     scroll->setWidgetResizable(true);
@@ -400,98 +423,64 @@ int main(int argc, char *argv[]) {
         "QScrollBar::handle:vertical { background: gray; border-radius: 10px; }"
         "QScrollBar::add-line, QScrollBar::sub-line { height: 0; }"
     );
-
     scroll->horizontalScrollBar()->setStyleSheet(
         "QScrollBar:horizontal { height: 40px; }"
         "QScrollBar::handle:horizontal { background: gray; border-radius: 10px; }"
         "QScrollBar::add-line, QScrollBar::sub-line { width: 0; }"
     );
 
-    // Window Transcluency
-    
+    // Step 4: main window
     QWidget window;
     window.setAttribute(Qt::WA_TranslucentBackground);
     window.setWindowFlag(Qt::FramelessWindowHint);
 
     QVBoxLayout *mainLayout = new QVBoxLayout(&window);
-    // mainLayout->setContentsMargins(20, 20, 20, 20); // left, top, right, bottom
     mainLayout->setContentsMargins(WINDOW_PADDING, WINDOW_PADDING, WINDOW_PADDING, WINDOW_PADDING);
     mainLayout->addWidget(scroll);
 
-    // Bottom controls layout
+    // Step 5: bottom controls
     QHBoxLayout *controlsLayout = new QHBoxLayout();
-    controlsLayout->setContentsMargins(10, 10, 10, 10); // left, top, right, bottom
+    controlsLayout->setContentsMargins(5,5,5,5);
 
-    // Zoom slider on left
+    // Zoom slider
     QSlider *zoomSlider = new QSlider(Qt::Horizontal);
     zoomSlider->setMinimum(64);
     zoomSlider->setMaximum(512);
-    zoomSlider->setValue(THUMB_HEIGHT);
-    zoomSlider->setFixedWidth(200); // Fixed Size
-
-    // Restore zoom
     int savedZoom = settings.value("zoom", THUMB_HEIGHT).toInt();
     zoomSlider->setValue(savedZoom);
     THUMB_HEIGHT = savedZoom;
-
-    QObject::connect(zoomSlider, &QSlider::valueChanged, [&](int value){
-        // Find the thumbnail at viewport center
-        int centerY = scroll->verticalScrollBar()->value() + scroll->viewport()->height()/2;
-        int indexAtCenter = grid->getThumbnailIndexAtY(centerY);
-
-        // Update zoom and repaint
-        THUMB_HEIGHT = value;
-        grid->update();
-
-        // After layout, scroll to keep same thumbnail centered
-        QTimer::singleShot(0, [=](){
-            int newCenterY = grid->getYPositionOfThumbnail(indexAtCenter);
-            scroll->verticalScrollBar()->setValue(newCenterY - scroll->viewport()->height()/2);
-        });
-
-        // Save zoom
-        settings.setValue("zoom", value);
-    });
-
-    // Spacer in middle
+    zoomSlider->setFixedWidth(200);
     controlsLayout->addWidget(zoomSlider);
     controlsLayout->addStretch();
 
-    // ComboBox on right
-    QComboBox *combo = new QComboBox();
-
-    // Populate combo with monitors detected by hyprctl
-    combo->clear();
-    for (const QString &m : monitors) {
-        combo->addItem(m);
-    }
-    combo->setFixedWidth(100); // Fixed Size
-
-    // Restore combobox selection if available
-    int savedIndex = settings.value("comboIndex", -1).toInt();
-    if (savedIndex >= 0 && savedIndex < combo->count()) {
-        combo->setCurrentIndex(savedIndex);
-        grid->setCurrentMonitor(combo->currentText());
-    } else if (combo->count() > 0) {
-        // fallback only if nothing saved
-        combo->setCurrentIndex(0);
-        grid->setCurrentMonitor(combo->currentText());
-    }
-
-    // Keep combobox and grid in sync
-    QObject::connect(combo, &QComboBox::currentTextChanged,
-                    grid, &QHppQ::setCurrentMonitor);
-
-    QObject::connect(combo, QOverload<int>::of(&QComboBox::currentIndexChanged), [&](int index){
-        settings.setValue("comboIndex", index);  // save selection
+    QObject::connect(zoomSlider, &QSlider::valueChanged, [&](int value){
+        THUMB_HEIGHT = value;
+        grid->update();
+        settings.setValue("zoom", value);
     });
 
+    // Monitor ComboBox
+    QComboBox *combo = new QComboBox();
+    for (const QString &m : monitors) combo->addItem(m);
+    combo->setFixedWidth(100);
+
+    int savedIndex = settings.value("comboIndex", -1).toInt();
+    if (savedIndex >= 0 && savedIndex < combo->count())
+        combo->setCurrentIndex(savedIndex);
+    else if (combo->count() > 0)
+        combo->setCurrentIndex(0);
+
+    auto setMonitorLambda = [&](const QString &text){
+        if(cpuFlag) static_cast<QHppQ*>(grid)->setCurrentMonitor(text);
+        else static_cast<QHppQ_GPU*>(grid)->setCurrentMonitor(text);
+    };
+    setMonitorLambda(combo->currentText());
+    QObject::connect(combo, &QComboBox::currentTextChanged, setMonitorLambda);
+    QObject::connect(combo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+                     [&](int index){ settings.setValue("comboIndex", index); });
 
     controlsLayout->addWidget(combo);
-    controlsLayout->setContentsMargins(5, 5, 5, 5); // left, top, right, bottom
-
     mainLayout->addLayout(controlsLayout);
-
 
     window.setWindowTitle("Qt Hyprpaper GUI");
     window.resize(800, 600);
