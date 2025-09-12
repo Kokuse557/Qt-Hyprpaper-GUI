@@ -11,11 +11,14 @@ find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets OpenGLWidgets)
 set(SOURCES
     src/main.cpp
     src/reload.cpp
+    src/gpu_renderer.cpp
     src/inotifywatcher.cpp
 )
 set(HEADERS
     src/reload.h
+    src/cachedImage.h
     src/paths.h
+    gpu_renderer.h
     src/inotifywatcher.h     
 )
 
